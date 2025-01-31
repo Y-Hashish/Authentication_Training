@@ -19,14 +19,18 @@ namespace TodoApi
 
             // Add services to the container.
 
-            builder.Services.AddControllers();
+            //builder.Services.AddControllers();
+
+            builder.Services.AddControllers().ConfigureApiBehaviorOptions(
+                options => options.SuppressModelStateInvalidFilter = true
+                );
 
 
             builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
 
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
 
-            builder.Services.AddScoped<IAuth, Auth>();
+            builder.Services.AddScoped<IAuth, AuthServ>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

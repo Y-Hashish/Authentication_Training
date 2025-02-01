@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using Auth.Models;
+using AuthProj.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.DotNet.Scaffolding.Shared.Messaging;
@@ -47,7 +48,7 @@ namespace TodoApi.Services
                 }
                 return new AuthModel { Message = errors };
             }
-            _userManager.AddToRoleAsync(user, "User");
+            await _userManager.AddToRoleAsync(user, "User");
             var token = await CreateTokenAsync(user);
             return new AuthModel
             {
@@ -60,6 +61,28 @@ namespace TodoApi.Services
             };
 
         }
+        public async Task<AuthModel> GetToken(Getuser model)
+        {
+            var authmodel = new AuthModel();
+            var user = await _userManager.FindByEmailAsync(model.Email);
+
+            if(user == null || !await _userManager.CheckPasswordAsync(user,model.Password))
+            {
+                authmodel.Message = "Email or Password is incorrect!";
+                return authmodel;
+            }
+            var token = await CreateTokenAsync(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            authmodel.ExpiresOn = token.ValidTo;
+            authmodel.IsAuth = true;
+            authmodel.Email = user.Email;
+            authmodel.UserName = user.UserName;
+            authmodel.Roles = roles.ToList();
+            authmodel.Token = new JwtSecurityTokenHandler().WriteToken(token);
+            return authmodel;
+        }
+
+
         public async Task<JwtSecurityToken> CreateTokenAsync(ApplicationUser user)
         {
             var UserClaims = await _userManager.GetClaimsAsync(user);
